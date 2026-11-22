@@ -244,6 +244,12 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
       });
       conn.on("close", function () { log("Other device disconnected."); setStatus("Disconnected"); });
       conn.on("error", function (e) { log("Connection error: " + (e && e.message ? e.message : e), "err"); });
+      conn.on("iceStateChanged", function (state) {
+        if (state === "disconnected" || state === "failed" || state === "closed") {
+          log("The direct connection dropped (" + state + "). Strict networks can block it — try both devices on the same Wi-Fi, then start a fresh code.", "err");
+          setStatus("Connection lost");
+        }
+      });
     });
     peer.on("error", function (err) { log(friendlyPeerError(err), "err"); setStatus("Not connected"); $("btnSendCode").disabled = false; });
   };
@@ -307,7 +313,16 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
     role = "receive";
     peer.on("open", function () {
       conn = peer.connect(peerIdFor(code), { reliable: true });
+      var opened = false;
+      var giveUp = setTimeout(function () {
+        if (opened) return;
+        log("The sender answered the code, but the direct device-to-device link never opened. Some networks block this kind of connection — try again with both devices on the same Wi-Fi, or switch one of them to mobile data.", "err");
+        setStatus("Could not connect");
+        $("btnReceive").disabled = false;
+      }, 30000);
       conn.on("open", function () {
+        opened = true;
+        clearTimeout(giveUp);
         setStatus("Connected to sender — waiting for the file list…");
         log("Connected to sender " + code + ".", "ok");
         keepAwake();
@@ -316,6 +331,12 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
       conn.on("data", function (data) { onRecvData(data); });
       conn.on("close", function () { log("Sender disconnected."); setStatus("Disconnected"); });
       conn.on("error", function (e) { log("Connection error: " + (e && e.message ? e.message : e), "err"); });
+      conn.on("iceStateChanged", function (state) {
+        if (state === "disconnected" || state === "failed" || state === "closed") {
+          log("The direct connection dropped (" + state + "). Strict networks can block it — try both devices on the same Wi-Fi.", "err");
+          setStatus("Connection lost");
+        }
+      });
     });
     peer.on("error", function (err) { log(friendlyPeerError(err), "err"); setStatus("Not connected"); $("btnReceive").disabled = false; });
   };
