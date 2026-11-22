@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Share Fly — send files PC ↔ phone, right in the browser</title>
+<meta name="description" content="Share files between your PC and phone without leaving the browser. Pick files, share a 6-letter code, and they fly straight over — nothing uploaded to a server.">
+<meta property="og:title" content="Share Fly — files, PC ↔ phone, no app needed">
+<meta property="og:description" content="Pick files, share a 6-letter code, and they fly straight to the other device. Peer-to-peer in your browser — nothing stored on a server.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="banner.png">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root { --bg:#0b1e2e; --card:#12293d; --line:#23465f; --text:#eef6fb; --muted:#9db8c8; --sky:#38bdf8; --sky-dk:#0284c7; --soft:#a5e3ff; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background:var(--bg); color:var(--text); }
+  .wrap { max-width: 700px; margin: 0 auto; padding: 28px 16px 56px; }
+  h1 { font-size: 34px; margin: 6px 0 2px; letter-spacing: .2px; }
+  .tag { color: var(--muted); margin: 0 0 22px; line-height: 1.55; }
+  .hero-img { width: 100%; border-radius: 16px; border: 1px solid var(--line); margin: 4px 0 20px; display: block; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-top: 20px; }
+  .card h2 { font-size: 19px; margin: 0 0 6px; }
+  .card p.hint { color: var(--muted); font-size: 14px; line-height: 1.55; margin: 0 0 12px; }
+  .tabs { display:flex; gap:8px; margin-top: 4px; }
+  .tabs button { flex:1; background: transparent; color: var(--text); border: 1px solid var(--line); font-weight: 700; }
+  .tabs button.active { background: var(--sky); color:#04222f; border-color: var(--sky); }
+  button { background: var(--sky); color:#04222f; border:0; border-radius: 10px; padding: 12px 18px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); font-weight: 600; }
+  button.danger { background: transparent; color:#ffb4ab; border: 1px solid #5b2b28; font-weight: 600; }
+  button:disabled { opacity: .45; cursor: default; }
+  .row { display:flex; gap:10px; margin-top: 12px; flex-wrap: wrap; }
+  label { display:block; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 14px 0 6px; }
+  label:first-of-type { margin-top: 0; }
+  input[type=text] { width:100%; background:#081826; color:var(--text); border:1px solid var(--line); border-radius:12px; padding: 13px 14px; font-size: 18px; font-family: inherit; letter-spacing:.18em; text-transform: uppercase; }
+  input:focus { outline: 2px solid var(--sky); border-color: transparent; }
+  .drop { border: 2px dashed var(--line); border-radius: 14px; padding: 26px 16px; text-align: center; color: var(--muted); line-height: 1.6; cursor: pointer; }
+  .drop.drag { border-color: var(--sky); color: var(--soft); background:#0e2a3f; }
+  .file-row { display:flex; gap:10px; align-items:center; padding: 10px 0; border-top: 1px solid var(--line); font-size: 14.5px; }
+  .file-row:first-child { border-top: 0; }
+  .fname { flex:1; overflow:hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fsize { color: var(--muted); white-space: nowrap; }
+  .fprog { color: var(--soft); white-space: nowrap; min-width: 44px; text-align: right; }
+  .dl { color: var(--soft); font-weight: 700; white-space: nowrap; }
+  .empty { color: var(--muted); font-size: 14.5px; padding: 8px 0; }
+  .total { color: var(--muted); font-size: 13.5px; margin-top: 8px; }
+  .code-big { font-size: 44px; font-weight: 800; letter-spacing: .22em; text-align: center; margin: 8px 0 4px; color: var(--soft); }
+  .share-box { display:none; margin-top: 16px; background:#081826; border:1px solid var(--line); border-radius: 12px; padding: 16px; text-align: center; }
+  .share-box a { color: var(--soft); word-break: break-all; font-size: 14px; }
+  .qr-stage { background:#ffffff; border-radius: 16px; padding: 14px; margin: 14px auto 4px; width: 228px; display:flex; align-items:center; justify-content:center; min-height: 200px; }
+  .qr-stage canvas { max-width: 100%; height: auto; display:block; }
+  .qr-stage .empty { color:#5a6b60; }
+  .status { margin-top: 14px; font-size: 14px; color: var(--soft); }
+  .log { margin-top: 10px; background:#081826; border:1px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 13.5px; line-height: 1.7; color: var(--muted); max-height: 150px; overflow-y: auto; }
+  .log:empty { display:none; }
+  .foot { color: var(--muted); font-size: 13px; line-height: 1.6; margin-top: 30px; }
+  a { color: var(--soft); }
+</style>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b1e2e">
+</head>
+<body>
+<div class="wrap">
+  <h1>Share Fly ✈️</h1>
+  <p class="tag">Send files between your PC and your phone — without leaving the browser, without an app, without uploading them anywhere. Pick files on one device, type the code on the other, and they fly straight across.</p>
+  <img class="hero-img" src="banner.png" alt="Share Fly — send files PC to phone, right in the browser">
+
+  <div class="tabs">
+    <button id="btnTabSend" type="button" class="active">📤 Send files</button>
+    <button id="btnTabReceive" type="button">📥 Receive files</button>
+  </div>
+  <p class="status" id="connStatus">Not connected</p>
+
+  <!-- SEND -->
+  <div class="card" id="tabSend">
+    <h2>Send from this device</h2>
+    <p class="hint">Pick any files — photos, videos, documents, APKs, anything. They stay on this device until the other one connects.</p>
+    <div class="drop" id="dropZone">Tap to pick files, or drag &amp; drop them here<br><span style="font-size:13px">Multiple files are fine — they send one after another.</span></div>
+    <input type="file" id="fileInput" multiple style="display:none">
+    <div class="row">
+      <button id="btnPick" type="button" class="ghost">Choose files</button>
+      <button id="btnClearFiles" type="button" class="ghost">Clear</button>
+    </div>
+    <div id="sendList" style="margin-top:10px"></div>
+    <div class="total" id="sendTotal"></div>
+    <div class="row"><button id="btnSendCode" type="button" disabled>Get a share code</button></div>
+    <div class="share-box" id="shareBox">
+      <div style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700">Your code — type it on the other device</div>
+      <div class="code-big" id="sendCode">······</div>
+      <div class="qr-stage" id="qrStage"><div class="empty">QR code…</div></div>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">…or scan this with the other device's camera — it opens this page with the code filled in.</div>
+      <div style="margin-top:10px"><a id="sendLink" href="#" target="_blank" rel="noopener"></a></div>
+      <div class="row" style="justify-content:center">
+        <button id="btnCopyCode" type="button" class="ghost">Copy code</button>
+        <button id="btnCopyLink" type="button" class="ghost">Copy link</button>
+        <button id="btnNewCode" type="button" class="ghost">New code</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECEIVE -->
+  <div class="card" id="tabReceive" style="display:none">
+    <h2>Receive on this device</h2>
+    <p class="hint">Get the 6-letter code from the sending device (or open the link / scan its QR — the code fills itself in), then connect.</p>
+    <label for="recvCode">Share code</label>
+    <input type="text" id="recvCode" maxlength="6" placeholder="ABC123" autocomplete="off" autocapitalize="characters" spellcheck="false">
+    <div class="row"><button id="btnReceive" type="button">Connect &amp; receive</button></div>
+    <div id="recvList" style="margin-top:10px"></div>
+  </div>
+
+  <div class="row"><button id="btnEnd" type="button" class="danger" style="display:none">End session</button></div>
+  <div class="log" id="statusLog"></div>
+
+  <p class="foot"><strong>How it works, honestly:</strong> both devices open this page at the same time and connect with a code. Files travel directly browser-to-browser over WebRTC — no file ever touches a server, and nothing is stored anywhere. A free signalling service (PeerJS cloud) only introduces the two browsers. Keep both tabs open until the transfer finishes; the page asks your screen to stay awake while sending or receiving. Very large files work, but they take a while — the progress % is per file. On a strict office/school network the direct connection can be blocked; on home Wi-Fi and mobile data it normally just works. Works on PC, Android and iPhone, all in the browser.</p>
+
+<footer class="bangees-more" style="margin-top:44px;background:#081226;color:#e8eefc;padding:22px 16px 26px;text-align:center;font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;"><div style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8fb4ff;margin-bottom:9px;">More from Bangees</div><nav style="font-size:14.5px;line-height:2;"><a href="https://iambangees.github.io/agent-roll-call/" style="color:#cfe0ff;text-decoration:none;">Agent Roll Call</a> · <a href="https://iambangees.github.io/name-atlas/" style="color:#cfe0ff;text-decoration:none;">Name Atlas</a> · <a href="https://iambangees.github.io/naira-lens/" style="color:#cfe0ff;text-decoration:none;">Naira Lens</a> · <a href="https://iambangees.github.io/aeris/" style="color:#cfe0ff;text-decoration:none;">Aeris</a> · <a href="https://iambangees.github.io/memelab/" style="color:#cfe0ff;text-decoration:none;">MemeLab</a> · <a href="https://iambangees.github.io/vidgrab/" style="color:#cfe0ff;text-decoration:none;">VidGrab</a> · <a href="https://iambangees.github.io/pic-to-draw/" style="color:#cfe0ff;text-decoration:none;">PicToDraw</a> · <a href="https://iambangees.github.io/agent-cards/" style="color:#cfe0ff;text-decoration:none;">Agent Cards</a> · <a href="https://iambangees.github.io/claim-checker/" style="color:#cfe0ff;text-decoration:none;">Claim Checker</a> · <a href="https://iambangees.github.io/bet-diary/" style="color:#cfe0ff;text-decoration:none;">Bet Diary</a> · <a href="https://iambangees.github.io/qr-maker/" style="color:#cfe0ff;text-decoration:none;">QR Maker</a> · <a href="https://iambangees.github.io/scan-to-3d/" style="color:#cfe0ff;text-decoration:none;">Scan to 3D</a> · <a href="https://discaro.vercel.app" style="color:#cfe0ff;text-decoration:none;">Discaro</a></nav></footer>
+</div>
+<script src="qrcode.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
